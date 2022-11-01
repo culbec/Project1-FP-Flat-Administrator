@@ -194,4 +194,3 @@ def filter_expense_by_type_service(apartment_list, expense, permitted_expenses):
     """
     expense_validation(expense, permitted_expenses)
     return filter_expense_by_type(apartment_list, expense)
-

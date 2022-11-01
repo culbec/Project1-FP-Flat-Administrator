@@ -1,21 +1,3 @@
-def get_apartment_number(apartment):
-    """
-        Returns the apartment_number of entity apartment
-    :param apartment: apartment
-    :return: apartment_number of entity apartment
-    """
-    return apartment[0]
-
-
-def get_expense_dict(apartment):
-    """
-        Returns the expense_dict of entity apartment
-    :param apartment: apartment
-    :return: expense_list of entity apartment
-    """
-    return apartment[1]
-
-
 def create_apartment(apartment_number, expense_dict):
     """
         Returns an entity of type apartment with it's unique integer identification apartment_number
@@ -26,7 +8,25 @@ def create_apartment(apartment_number, expense_dict):
     :return: entity of type apartment with apartment_number integer as identification method and
              expense_dict as dictionary of expenses
     """
-    return [apartment_number, expense_dict]
+    return {apartment_number: expense_dict}
+
+
+def get_apartment_number(apartment):
+    """
+        Returns the apartment_number of entity apartment
+    :param apartment: apartment
+    :return: apartment_number of entity apartment
+    """
+    return next(iter(apartment.keys()))
+
+
+def get_expense_dict(apartment):
+    """
+        Returns the expense_dict of entity apartment
+    :param apartment: apartment
+    :return: expense_list of entity apartment
+    """
+    return next(iter(apartment.values()))
 
 
 def set_expense_value(apartment, expense, value):
