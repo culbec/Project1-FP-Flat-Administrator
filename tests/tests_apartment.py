@@ -1,12 +1,16 @@
-from domain.apartment import create_apartment, get_apartment_number, get_expense_dict, set_expense_value
+from domain.apartment import create_apartment, get_apartment_number, get_expense_dict, set_expense_value, \
+    set_expense_dict
+from domain.apartment_manager import create_apartment_manager, update_apartment_manager, get_current_list, \
+    get_undo_list, undo_manager
 from repository.repository_apartment import add_apartment_to_list, apartment_list_by_sum, total_sum_expense, \
     total_expense_for_apartment, filter_expense_by_sum, filter_expense_by_type, modify_apartment_expense, \
-    delete_all_expenses, sorted_apartment_by_expense_value, delete_all_expenses_for_consecutive_apartments
+    delete_all_expenses, sorted_apartment_by_expense_value, delete_all_expenses_for_consecutive_apartments, \
+    search_apartment_expense
 from service.service_apartment import add_apartment_to_list_service, apartment_list_by_sum_service, \
     total_sum_expense_service, \
     total_expense_for_apartment_service, filter_expenses_by_sum_service, filter_expense_by_type_service, \
     modify_apartment_expense_service, delete_all_expenses_service, sorted_apartment_by_expense_value_service, \
-    delete_all_expenses_for_consecutive_apartments_service
+    delete_all_expenses_for_consecutive_apartments_service, search_apartment_expense_service
 from validation.validation_apartment import apartment_validation, sum_validation, expense_validation, \
     apartment_number_validation, \
     value_validation, apartment_in_apartment_list, expense_in_apartment_expenses, positive_integer, \
@@ -19,8 +23,12 @@ def test_create_apartment():
     apartment = create_apartment(apartment_number, expense_dict)
     assert apartment_number == get_apartment_number(apartment)
     assert expense_dict == get_expense_dict(apartment)
+    # Testing set_expense_dict
+    set_expense_dict(apartment, {'apa': 100.5, 'internet': 300.1})
+    assert get_expense_dict(apartment) == {'apa': 100.5, 'internet': 300.1}
     # Testing the set_expense_value
-    set_expense_value(apartment, 'gaz', 100.1)
+    set_expense_value(apartment, 'apa', 100.1)
+    assert get_expense_dict(apartment) == {'apa': 100.1, 'internet': 300.1}
     try:
         set_expense_value(apartment, 'TV', 300.1)
         assert False
@@ -210,7 +218,11 @@ def test_repository_apartment():
     except ValueError as ve:
         assert str(ve) == "Cheltuiala nu este asociata acestui apartament!"
     # Testing delete_all_expenses
-    delete_all_expenses(apartment_list, 4)
+    assert delete_all_expenses(apartment_list, 4) == [{4: {}},
+                                                      {23: {'TV': 123.25, 'internet': 80.34, 'chirie': 160.27}},
+                                                      {53: {'gaz': 500.4, 'chirie': 200.3, 'curent': 200.1}},
+                                                      {2: {'gaz': 100.2, 'apa': 200.1, 'curent': 200.0}}]
+    set_expense_dict(apartment1, {})
     try:
         delete_all_expenses(apartment_list, 4)
         assert False
@@ -222,17 +234,25 @@ def test_repository_apartment():
                                                                         {4: {}},
                                                                         {23: {'TV': 123.25, 'internet': 80.34, 'chirie': 160.27}}]
     try:
-        sorted_apartment_by_expense_value(apartment_list, 'salubrizare')
-        assert False
+        assert sorted_apartment_by_expense_value(apartment_list, 'salubrizare')
     except ValueError as ve:
         assert str(ve) == "Cheltuiala nu este asociata niciunui apartament!"
     # Testing delete_all_expenses_for_consecutive_apartments
-    delete_all_expenses_for_consecutive_apartments(apartment_list, 1, 3)
+    assert delete_all_expenses_for_consecutive_apartments(apartment_list, 1, 3) == [{4: {}},
+                                                                                    {23: {}},
+                                                                                    {53: {}},
+                                                                                    {2: {}}]
     try:
-        delete_all_expenses_for_consecutive_apartments(apartment_list, 1, 3)
-        assert False
+        assert delete_all_expenses_for_consecutive_apartments(apartment_list, 1, 3)
     except ValueError as ve:
         assert str(ve) == "Listele de cheltuieli ale acestor apartamente sunt deja goale!"
+    # Testing search_apartment_expense
+    assert search_apartment_expense(apartment_list, 'gaz') == [{53: {'gaz': 500.4, 'chirie': 200.3, 'curent': 200.1}},
+                                                               {2: {'gaz': 100.2, 'apa': 200.1, 'curent': 200.0}}]
+    try:
+        assert search_apartment_expense(apartment_list, 'salubrizare')
+    except ValueError as ve:
+        assert str(ve) == "Cheltuiala nu este asociata niciunui apartament!"
 
 
 def test_service_apartment():
@@ -349,24 +369,24 @@ def test_service_apartment():
     except ValueError as ve:
         assert str(ve) == "Cheltuiala nu este asociata acestui apartament!"
     # Testing delete_all_expenses_service
-    delete_all_expenses_service(apartment_list, 4)
+    assert delete_all_expenses_service(apartment_list, 4) == [{4: {}},
+                                                              {23: {'gaz': 205.6, 'TV': 300.1, 'curent': 210.1}},
+                                                              {5: {'gaz': 315.2, 'TV': 150.3, 'salubrizare': 200.1, 'internet': 80.2}}]
     try:
         delete_all_expenses_service(apartment_list, -4)
         assert False
     except ValueError as ve:
         assert str(ve) == "Apartamentul nu exista!"
     try:
-        delete_all_expenses_service(apartment_list, 4)
-        assert False
+        assert delete_all_expenses_service(apartment_list, 4)
     except ValueError as ve:
         assert str(ve) == "Lista de cheltuieli este deja goala!"
     # Testing sorted_apartment_by_expense_value_service
-    assert sorted_apartment_by_expense_value_service(apartment_list, 'gaz', permitted_expenses) == [{23: {'gaz': 205.6, 'TV': 300.1, 'curent': 210.1}},
-                                                                                                    {5: {'gaz': 315.2, 'TV': 150.3, 'salubrizare': 200.1, 'internet': 80.2}},
-                                                                                                    {4: {}}]
+    assert sorted_apartment_by_expense_value_service(apartment_list, 'gaz', permitted_expenses) == [{4: {'gaz': 54.5, 'apa': 51.4, 'curent': 100.43}},
+                                                                                                    {23: {'gaz': 205.6, 'TV': 300.1, 'curent': 210.1}},
+                                                                                                    {5: {'gaz': 315.2, 'TV': 150.3, 'salubrizare': 200.1, 'internet': 80.2}}]
     try:
-        sorted_apartment_by_expense_value_service(apartment_list, 'chirie', permitted_expenses)
-        assert False
+        assert sorted_apartment_by_expense_value_service(apartment_list, 'chirie', permitted_expenses)
     except ValueError as ve:
         assert str(ve) == "Cheltuiala nu este asociata niciunui apartament!"
     try:
@@ -375,10 +395,11 @@ def test_service_apartment():
     except ValueError as ve:
         assert str(ve) == "Tipul de cheltuiala nu este permis!"
     # Testing delete_all_expenses_for_consecutive_apartments
-    delete_all_expenses_for_consecutive_apartments_service(apartment_list, 0, 2)
+    assert delete_all_expenses_for_consecutive_apartments_service(apartment_list, 0, 2) == [{4: {}},
+                                                                                            {23: {}},
+                                                                                            {5: {}}]
     try:
-        delete_all_expenses_for_consecutive_apartments_service(apartment_list, 0, 2)
-        assert False
+        assert delete_all_expenses_for_consecutive_apartments_service(apartment_list, 0, 2)
     except ValueError as ve:
         assert str(ve) == "Listele de cheltuieli ale acestor apartamente sunt deja goale!"
     try:
@@ -396,6 +417,46 @@ def test_service_apartment():
         assert False
     except ValueError as ve:
         assert str(ve) == "Valoarea de inceput nu poate fi mai mare decat cea de final!"
+    # Testing search_apartment_expense_service
+    assert search_apartment_expense_service(apartment_list, 'gaz', permitted_expenses) == [{4: {'gaz': 54.5, 'apa': 51.4, 'curent': 100.43}},
+                                                                                           {23: {'gaz': 205.6, 'TV': 300.1, 'curent': 210.1}},
+                                                                                           {5: {'gaz': 315.2, 'TV': 150.3, 'salubrizare': 200.1, 'internet': 80.2}}]
+    try:
+        assert search_apartment_expense_service(apartment_list, 'TV', permitted_expenses)
+    except ValueError as ve:
+        assert str(ve) == "Cheltuiala nu este asociata niciunui apartament!"
+    try:
+        assert search_apartment_expense_service(apartment_list, 'gunoi', permitted_expenses)
+    except ValueError as ve:
+        assert str(ve) == "Tipul de cheltuiala nu este permis!"
+
+
+def test_apartment_manager():
+    # Testing add_apartment_to_manager
+    test_manager = create_apartment_manager()
+    apartment_list = []
+    permitted_expenses = ['gaz', 'apa', 'salubrizare', 'curent', 'TV', 'internet']
+    apartment1 = create_apartment(4, {'gaz': 300.1, 'apa': 500.4, 'curent': 127.3})
+    add_apartment_to_list_service(apartment_list, get_apartment_number(apartment1),
+                                  get_expense_dict(apartment1), permitted_expenses)
+    update_apartment_manager(test_manager, apartment_list)
+    assert len(get_current_list(test_manager)) == 1
+
+    apartment2 = create_apartment(5, {'TV': 100.3, 'apa': 200.0})
+    add_apartment_to_list_service(apartment_list, get_apartment_number(apartment2),
+                                  get_expense_dict(apartment2), permitted_expenses)
+    update_apartment_manager(test_manager, apartment_list)
+    assert len(get_current_list(test_manager)) == 2 and len(get_undo_list(test_manager)) == 2
+    # Testing undo
+    undo_manager(test_manager)
+    assert len(get_current_list(test_manager)) == 1
+    undo_manager(test_manager)
+    assert len(get_current_list(test_manager)) == 0
+    try:
+        undo_manager(test_manager)
+        assert False
+    except ValueError as ve:
+        assert str(ve) == "Nu se mai poate face undo!"
 
 
 def run_all_tests():
@@ -407,3 +468,4 @@ def run_all_tests():
     # print("Apartment repository test ended successfully!")
     test_service_apartment()
     # print("Apartment service test ended successfully!")
+    test_apartment_manager()

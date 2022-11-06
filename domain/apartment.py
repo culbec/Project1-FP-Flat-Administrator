@@ -29,6 +29,17 @@ def get_expense_dict(apartment):
     return next(iter(apartment.values()))
 
 
+def set_expense_dict(apartment, expense_dict):
+    """
+    Sets the expense list of apartment to expense_dict
+    :param apartment: apartment
+    :param expense_dict: expense_dict
+    :return: -
+    """
+    apartment_number = get_apartment_number(apartment)
+    apartment[apartment_number] = expense_dict
+
+
 def set_expense_value(apartment, expense, value):
     """
         Sets the value of the expense in the expense_dict of apartment to float value

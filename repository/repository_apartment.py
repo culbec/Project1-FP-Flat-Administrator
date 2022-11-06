@@ -51,13 +51,15 @@ def delete_all_expenses(apartment_list, apartment_number):
     :raises ValueError: - if the expense list is already clear
                         - the associated string is: "Lista de cheltuieli este deja goala!"
     """
+    updated_apartment_list = []
     for apartment in apartment_list:
         if apartment_number == get_apartment_number(apartment):
             if len(get_expense_dict(apartment)) == 0:
                 raise ValueError("Lista de cheltuieli este deja goala!")
-            else:
-                get_expense_dict(apartment).clear()
-                return
+            updated_apartment_list.append({apartment_number: {}})
+        else:
+            updated_apartment_list.append({get_apartment_number(apartment): get_expense_dict(apartment)})
+    return updated_apartment_list
 
 
 def delete_all_expenses_for_consecutive_apartments(apartment_list, start_index, stop_index):
@@ -70,14 +72,16 @@ def delete_all_expenses_for_consecutive_apartments(apartment_list, start_index, 
     :raises ValueError: - if the expense list of every apartment in [start_index, stop_index] is already clear
                         - the associated string is: "Listele de cheltuieli ale acestor apartamente sunt deja goale!"
     """
-    number_of_clear_expense_lists = 0
+    updated_apartment_list = []
     for apartment in apartment_list:
         if start_index <= apartment_list.index(apartment) <= stop_index:
             if len(get_expense_dict(apartment)) > 0:
-                get_expense_dict(apartment).clear()
-                number_of_clear_expense_lists += 1
-    if number_of_clear_expense_lists == 0:
-        raise ValueError("Listele de cheltuieli ale acestor apartamente sunt deja goale!")
+                updated_apartment_list.append({get_apartment_number(apartment): {}})
+            else:
+                raise ValueError("Listele de cheltuieli ale acestor apartamente sunt deja goale!")
+        else:
+            updated_apartment_list.append({get_apartment_number(apartment): get_expense_dict(apartment)})
+    return updated_apartment_list
 
 
 def apartment_list_by_sum(apartment_list, sum_searched):
@@ -100,6 +104,24 @@ def apartment_list_by_sum(apartment_list, sum_searched):
     if len(apartment_list_greater_than_sum) == 0:
         raise ValueError("Nu a fost gasit niciun apartament cu aceasta proprietate!")
     return apartment_list_greater_than_sum
+
+
+def search_apartment_expense(apartment_list, expense):
+    """
+    Creates a list with all the apartments that contain the passed expense.
+    :param apartment_list: list
+    :param expense: string
+    :return: apartment list that contains all apartments that contain the passed expense
+    :raises ValueError: - if the expense couldn't be found in any of the apartments in apartment_list
+                        - the associated string is: "Cheltuiala nu este asociata niciunui apartament!"
+    """
+    expense_apartment_list = []
+    for apartment in apartment_list:
+        if expense in get_expense_dict(apartment):
+            expense_apartment_list.append(apartment)
+    if len(expense_apartment_list) == 0:
+        raise ValueError("Cheltuiala nu este asociata niciunui apartament!")
+    return expense_apartment_list
 
 
 def total_sum_expense(apartment_list, expense):
@@ -147,8 +169,6 @@ def sorted_apartment_by_expense_value(apartment_list, expense):
     for apartment in apartment_list:
         if expense not in get_expense_dict(apartment):
             new_apartment_list.append(apartment)
-    if new_apartment_list == apartment_list:
-        raise ValueError("Cheltuiala nu este asociata niciunui apartament!")
     return new_apartment_list
 
 

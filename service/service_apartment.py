@@ -1,11 +1,24 @@
-from domain.apartment import create_apartment
+from domain.apartment import create_apartment, get_apartment_number, get_expense_dict
 from repository.repository_apartment import add_apartment_to_list, apartment_list_by_sum, total_sum_expense, \
     total_expense_for_apartment, filter_expense_by_sum, filter_expense_by_type, modify_apartment_expense, \
-    delete_all_expenses, sorted_apartment_by_expense_value, delete_all_expenses_for_consecutive_apartments
+    delete_all_expenses, sorted_apartment_by_expense_value, delete_all_expenses_for_consecutive_apartments, \
+    search_apartment_expense
 from validation.validation_apartment import apartment_validation, sum_validation, expense_validation, \
     apartment_number_validation, \
     value_validation, apartment_in_apartment_list, expense_in_apartment_expenses, lower_than_list_length_minus_one, \
     positive_integer, lower_than_or_equal_indexes
+
+
+def list_copy(apartment_list):
+    """
+    Returns a copy of apartment_list.
+    :param apartment_list: apartment_list
+    :return: copy of apartment_list
+    """
+    copy_list = []
+    for apartment in apartment_list:
+        copy_list.append({get_apartment_number(apartment): get_expense_dict(apartment)})
+    return copy_list
 
 
 def add_apartment_to_list_service(apartment_list, apartment_number, expense_dict, permitted_expenses):
@@ -19,7 +32,7 @@ def add_apartment_to_list_service(apartment_list, apartment_number, expense_dict
     :param permitted_expenses: list
     :return: - (if the apartment was added successfully)
     :raises ValueError: - if the apartment_number is not an integer > 0 with the string "Numar de apartament invalid!"
-                       - if the expenses in the expense_dict are not in the permitted_expenses
+                        - if the expenses in the expense_dict are not in the permitted_expenses
                           with the string "Tipul de cheltuiala nu este permis!"
                         - if the apartment exists and already has that type of expense added
                           with the string "Acest tip de cheltuiala deja exista!"
@@ -41,7 +54,7 @@ def delete_all_expenses_service(apartment_list, apartment_number):
                         - the associated string is: "Lista de cheltuieli este deja goala!"
     """
     apartment_in_apartment_list(apartment_list, apartment_number)
-    delete_all_expenses(apartment_list, apartment_number)
+    return delete_all_expenses(apartment_list, apartment_number)
 
 
 def delete_all_expenses_for_consecutive_apartments_service(apartment_list, start_index, stop_index):
@@ -65,7 +78,7 @@ def delete_all_expenses_for_consecutive_apartments_service(apartment_list, start
     positive_integer(stop_index)
     lower_than_list_length_minus_one(apartment_list, stop_index)
     lower_than_or_equal_indexes(start_index, stop_index)
-    delete_all_expenses_for_consecutive_apartments(apartment_list, start_index, stop_index)
+    return delete_all_expenses_for_consecutive_apartments(apartment_list, start_index, stop_index)
 
 
 def apartment_list_by_sum_service(apartment_list, sum_searched):
@@ -144,6 +157,22 @@ def total_expense_for_apartment_service(apartment_list, apartment_number):
     """
     apartment_number_validation(apartment_number)
     return total_expense_for_apartment(apartment_list, apartment_number)
+
+
+def search_apartment_expense_service(apartment_list, expense, permitted_expenses):
+    """
+    Creates a list with all the apartments that contain the passed expense.
+    :param apartment_list: list
+    :param expense: string
+    :param permitted_expenses: list
+    :return: apartment list that contains all apartments that contain the passed expense
+    :raises ValueError: - if the expense is not in permitted_expenses
+                        - the associated string is: "Tipul de cheltuiala nu este permis!"
+                        - if the expense couldn't be found in any of the apartments in apartment_list
+                        - the associated string is: "Cheltuiala nu este asociata niciunui apartament!"
+    """
+    expense_validation(expense, permitted_expenses)
+    return search_apartment_expense(apartment_list, expense)
 
 
 def sorted_apartment_by_expense_value_service(apartment_list, expense, permitted_expenses):
